@@ -38,11 +38,11 @@ defmodule ExLogic do
 
       iex> x = Var.new("x")
       iex> y = Var.new("y")
-      iex> ExLogic.walk(x, %{x => y, y => 3})
+      iex> walk(x, %{x => y, y => 3})
       3
-      iex> ExLogic.walk(:atom, %{})
+      iex> walk(:atom, %{})
       :atom
-      iex> ExLogic.walk(y, %{x => 6})
+      iex> walk(y, %{x => 6})
       y
 
   """
@@ -67,10 +67,10 @@ defmodule ExLogic do
 
       iex> {x, y, z} = {Var.new("x"), Var.new("y"), Var.new("z")}
       iex> s = %{z => x, y => z}
-      iex> ExLogic.extend_s(x, y, s)
+      iex> extend_s(x, y, s)
       :error
       iex> s = %{x => y}
-      iex> ExLogic.extend_s(y, [z], s)
+      iex> extend_s(y, [z], s)
       {:ok, %{x => y, y => [z]}}
 
   """
@@ -90,12 +90,12 @@ defmodule ExLogic do
   ## Examples
 
       iex> x = Var.new("x")
-      iex> ExLogic.occurs?(x, x, ExLogic.empty_s)
+      iex> occurs?(x, x, empty_s())
       true
 
       iex> y = Var.new("y")
       iex> z = Var.new("z")
-      iex> ExLogic.occurs?(y, [z], %{z => y})
+      iex> occurs?(y, [z], %{z => y})
       true
 
   """
@@ -122,7 +122,7 @@ defmodule ExLogic do
 
       iex> x = Var.new("x")
       iex> y = Var.new("y")
-      iex> ExLogic.unify([x], y, %{y => [1]})
+      iex> unify([x], y, %{y => [1]})
       {:ok, %{x => 1, y => [1]}}
 
   """

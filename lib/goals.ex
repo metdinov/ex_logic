@@ -22,8 +22,8 @@ defmodule ExLogic.Goals do
 
   ## Examples
 
-      iex> x = ExLogic.Var.new("x")
-      iex> g = ExLogic.succeed
+      iex> x = Var.new("x")
+      iex> g = succeed()
       iex> g.(%{x => :olive})
       [%{x => :olive}]
 
@@ -38,8 +38,8 @@ defmodule ExLogic.Goals do
 
   ## Examples
 
-      iex> x = ExLogic.Var.new("x")
-      iex> g = ExLogic.fail
+      iex> x = Var.new("x")
+      iex> g = fail()
       iex> g.(%{x => :olive})
       []
 
@@ -55,8 +55,8 @@ defmodule ExLogic.Goals do
 
   ## Examples
 
-      iex> x = ExLogic.Var.new("x")
-      iex> g = ExLogic.eq(x, [1])
+      iex> x = Var.new("x")
+      iex> g = eq(x, [1])
       iex> g.(%{})
       [%{x => [1]}]
   """
@@ -75,7 +75,7 @@ defmodule ExLogic.Goals do
 
   ## Examples
 
-      iex> x = ExLogic.Var.new("x")
+      iex> x = Var.new("x")
       iex> g1 = eq(x, :olive)
       iex> g2 = eq(x, :oil)
       iex> disj(g1, g2)
@@ -110,7 +110,7 @@ defmodule ExLogic.Goals do
 
   ## Examples
 
-      iex> x = ExLogic.Var.new("x")
+      iex> x = Var.new("x")
       iex> g1 = eq(x, :olive)
       iex> g2 = eq(x, :oil)
       iex> disj(g1, g2)
@@ -135,5 +135,25 @@ defmodule ExLogic.Goals do
 
   defp append_map(g, [h | t]) do
     append_stream(g.(h), append_map(g, t))
+  end
+
+  @doc """
+  Takes a name and a function that takes a `%Var{}` and produces a goal.
+  Returns a goal that has access to the variable created.
+
+  ## Examples
+
+      iex> f = fn fruit -> eq(:plum, fruit) end
+      iex> g = call_with_fresh(:kiwi, f)
+      iex> g.(ExLogic.empty_s)
+      [%{#ExLogic.Var<name: "kiwi", ...> => :plum}]
+
+  """
+  @spec call_with_fresh(name :: String.t(), f :: (ExLogic.Var.t() -> goal())) :: goal()
+  def call_with_fresh(name, f) do
+    fn s ->
+      g = f.(ExLogic.Var.new(name))
+      g.(s)
+    end
   end
 end

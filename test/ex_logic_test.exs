@@ -1,5 +1,7 @@
 defmodule ExLogicTest do
   use ExUnit.Case
+
+  import ExLogic
   alias ExLogic.Var
 
   doctest ExLogic
