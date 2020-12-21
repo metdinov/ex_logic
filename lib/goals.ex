@@ -10,6 +10,7 @@ defmodule ExLogic.Goals do
   """
 
   import ExLogic
+  alias ExLogic.Var
 
   @type stream :: maybe_improper_list(ExLogic.substitution(), stream) | suspension()
 
@@ -80,8 +81,8 @@ defmodule ExLogic.Goals do
       iex> g2 = eq(x, :oil)
       iex> disj(g1, g2)
       [
-        %{#ExLogic.Var<name: "x", ...> => :olive},
-        %{#ExLogic.Var<name: "x", ...> => :oil}
+        %{#Var<name: "x", ...> => :olive},
+        %{#Var<name: "x", ...> => :oil}
       ]
 
   """
@@ -146,14 +147,111 @@ defmodule ExLogic.Goals do
       iex> f = fn fruit -> eq(:plum, fruit) end
       iex> g = call_with_fresh(:kiwi, f)
       iex> g.(ExLogic.empty_s)
-      [%{#ExLogic.Var<name: "kiwi", ...> => :plum}]
+      [%{#Var<name: "kiwi", ...> => :plum}]
 
   """
-  @spec call_with_fresh(name :: String.t(), f :: (ExLogic.Var.t() -> goal())) :: goal()
+  @spec call_with_fresh(name :: String.t(), f :: (Var.t() -> goal())) :: goal()
   def call_with_fresh(name, f) do
     fn s ->
-      g = f.(ExLogic.Var.new(name))
+      g = f.(Var.new(name))
       g.(s)
     end
   end
+
+  @doc """
+  Takes a value `v` and produces a function that takes a substitution and reifies `v`
+  using the given substitution.
+
+  ## Examples
+
+      iex> x = Var.new("x")
+      iex> rf = reify(x)
+      iex> g = disj(eq(x, :olive), eq(x, :oil))
+      iex> Enum.map(g.(ExLogic.empty_s), rf)
+      [:olive, :oil]
+  """
+  @spec reify(ExLogic.value()) :: (ExLogic.substitution() -> ExLogic.substitution())
+  def reify(v) do
+    fn s ->
+      v = walk_all(v, s)
+      r = reify_s(v, empty_s())
+      walk_all(v, r)
+    end
+  end
+
+  @spec walk_all(ExLogic.value(), ExLogic.substitution()) :: ExLogic.value()
+  defp walk_all(v, r) do
+    case walk(v, r) do
+      [h | t] -> [walk_all(h, r) | walk_all(t, r)]
+      v -> v
+    end
+  end
+
+  @doc """
+  Takes a value and a substitution and produces a substitution of reified names.
+
+  ## Examples
+
+      iex> x = Var.new("x")
+      iex> reify_s(x, %{x => :pear})
+      %{x => "_0"}
+  """
+  @spec reify_s(ExLogic.value(), ExLogic.substitution()) :: ExLogic.substitution()
+  def reify_s(v, s) do
+    case walk(v, s) do
+      %Var{} = v -> Map.put(s, v, reify_name(map_size(s)))
+      [h | t] -> reify_s(t, reify_s(h, s))
+      _ -> s
+    end
+  end
+
+  @spec reify_name(non_neg_integer()) :: String.t()
+  defp reify_name(n), do: "_#{n}"
+
+  @doc """
+  Takes `n` elements from a stream.
+
+  ## Examples
+
+      iex> x = Var.new("x")
+      iex> take(1, [%{x => :olive}, %{x => :oil}])
+      [%{#Var<name: "x", ...> => :olive}]
+      iex> take(2, [%{x => :olive}, %{x => :oil}])
+      [
+        %{#Var<name: "x", ...> => :olive},
+        %{#Var<name: "x", ...> => :oil}
+      ]
+
+  """
+  @spec take(non_neg_integer(), stream()) :: [ExLogic.substitution()]
+  def take(0, _stream) do
+    []
+  end
+
+  def take(_n, []) do
+    []
+  end
+
+  def take(n, stream) when n >= 1 do
+    case stream do
+      suspension when is_function(suspension) -> take(n, suspension.())
+      [h | t] -> [h | take(n - 1, t)]
+    end
+  end
+
+  @doc """
+  Takes all elements from a stream.
+
+  ## Examples
+
+      iex> x = Var.new("x")
+      iex> take_all([%{x => :olive}, %{x => :oil}])
+      [
+        %{#Var<name: "x", ...> => :olive},
+        %{#Var<name: "x", ...> => :oil}
+      ]
+
+  """
+  @spec take_all(stream()) :: [ExLogic.substitution()]
+  def take_all(stream), do: take(length(stream), stream)
 end
