@@ -136,7 +136,7 @@ defmodule ExLogic do
     v = walk(v, s)
 
     cond do
-      u == v -> {:ok, s}
+      u === v -> {:ok, s}
       var?(u) -> extend_s(u, v, s)
       var?(v) -> extend_s(v, u, s)
       is_list(u) and is_list(v) -> unify_lists(u, v, s)
@@ -151,26 +151,6 @@ defmodule ExLogic do
     case unify(hu, hv, s) do
       :error -> :error
       {:ok, s} -> unify(tu, tv, s)
-    end
-  end
-
-  @doc """
-  The _equals_ (≡) goal constructor.
-  It returns a goal that succeeds if its arguments unify.
-
-  ## Examples
-
-      iex> x = Var.new("x")
-      iex> g = ExLogic.eq(x, [1])
-      iex> g.(%{})
-      %{x => [1]}
-  """
-  def eq(u, v) do
-    fn s ->
-      case unify(u, v, s) do
-        {:ok, s} -> [s]
-        :error -> []
-      end
     end
   end
 end
