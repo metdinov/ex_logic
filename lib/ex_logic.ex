@@ -1,10 +1,6 @@
 defmodule ExLogic do
   @moduledoc """
   Implements the basic operations of miniKanren as explained in 'The Reasoned Schemer'.
-
-  Conventions:
-    - #s is represented as :succeed
-    - #u is represented as :fail
   """
 
   alias ExLogic.Var

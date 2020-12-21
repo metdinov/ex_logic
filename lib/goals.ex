@@ -3,6 +3,10 @@ defmodule ExLogic.Goals do
   Implements various goals to be used by `run` and `run_all`.
   Goals are functions that expect a substitution and return a stream
   of substitutions.
+
+    Conventions:
+    - #s is represented as succeed/0
+    - #u is represented as fail/0
   """
 
   import ExLogic
@@ -14,6 +18,38 @@ defmodule ExLogic.Goals do
   @type goal :: (ExLogic.substitution() -> stream())
 
   @doc """
+  The goal that always succeeds.
+
+  ## Examples
+
+      iex> x = ExLogic.Var.new("x")
+      iex> g = ExLogic.succeed
+      iex> g.(%{x => :olive})
+      [%{x => :olive}]
+
+  """
+  @spec succeed() :: goal()
+  def succeed do
+    fn s -> [s] end
+  end
+
+  @doc """
+  The goal that always fails.
+
+  ## Examples
+
+      iex> x = ExLogic.Var.new("x")
+      iex> g = ExLogic.fail
+      iex> g.(%{x => :olive})
+      []
+
+  """
+  @spec fail() :: goal()
+  def fail do
+    fn _ -> [] end
+  end
+
+  @doc """
   The _equals_ (≡) goal constructor.
   It returns a goal that succeeds if its arguments unify.
 
@@ -22,7 +58,7 @@ defmodule ExLogic.Goals do
       iex> x = ExLogic.Var.new("x")
       iex> g = ExLogic.eq(x, [1])
       iex> g.(%{})
-      %{x => [1]}
+      [%{x => [1]}]
   """
   @spec eq(ExLogic.value(), ExLogic.value()) :: goal()
   def eq(u, v) do
@@ -62,10 +98,42 @@ defmodule ExLogic.Goals do
   end
 
   defp append_stream(suspension, stream2) when is_function(suspension) do
-    append_stream(suspension.(), stream2)
+    fn -> append_stream(suspension.(), stream2) end
   end
 
   defp append_stream([h | t], stream2) do
     [h | append_stream(t, stream2)]
+  end
+
+  @doc """
+  The logic conjunction goal. Succeeds when `g1` and `g2` succeed.
+
+  ## Examples
+
+      iex> x = ExLogic.Var.new("x")
+      iex> g1 = eq(x, :olive)
+      iex> g2 = eq(x, :oil)
+      iex> disj(g1, g2)
+      []
+
+  """
+  @spec conj(goal(), goal()) :: goal()
+  def conj(g1, g2) do
+    fn s ->
+      append_map(g2, g1.(s))
+    end
+  end
+
+  @spec append_map(goal(), stream()) :: stream()
+  defp append_map(_g, []) do
+    []
+  end
+
+  defp append_map(g, suspension) when is_function(suspension) do
+    fn -> append_map(g, suspension.()) end
+  end
+
+  defp append_map(g, [h | t]) do
+    append_stream(g.(h), append_map(g, t))
   end
 end
