@@ -8,8 +8,7 @@ defmodule ExLogic.Substitution do
   """
 
   alias __MODULE__
-  alias ExLogic.Var
-  alias __MODULE__.Unify
+  alias ExLogic.{Var, Unify}
 
   @type t :: %{required(Var.t()) => ExLogic.ExLogic.value()}
 
@@ -135,66 +134,13 @@ defmodule ExLogic.Substitution do
     v = walk(v, s)
 
     cond do
-      u === v ->
-        {:ok, s}
-
-      var?(u) ->
-        extend_s(u, v, s)
-
-      var?(v) ->
-        extend_s(v, u, s)
-
-      Unify.impl_for(u) ->
-        Unify.unify(u, v, s)
-
-      true ->
-        :error
+      u === v -> {:ok, s}
+      var?(u) -> extend_s(u, v, s)
+      var?(v) -> extend_s(v, u, s)
+      true -> Unify.unify(u, v, s)
     end
   end
 
   defp var?(%Var{}), do: true
   defp var?(_), do: false
-
-  defprotocol Unify do
-    @spec unify(any, any, any) :: any
-    def unify(u, v, s)
-  end
-
-  defimpl Unify, for: List do
-    alias ExLogic.Substitution
-
-    @spec unify(any, any, any) :: :error | {:ok, %{optional(ExLogic.Var.t()) => any}}
-    def unify(_u, v, _s) when not is_list(v) do
-      :error
-    end
-
-    def unify([hu | tu], [hv | tv], s) do
-      case Substitution.unify(hu, hv, s) do
-        :error -> :error
-        {:ok, s} -> Substitution.unify(tu, tv, s)
-      end
-    end
-
-    defimpl Unify, for: Map do
-      alias ExLogic.Substitution
-
-      @spec unify(any, any, any) :: :error | {:ok, %{optional(ExLogic.Var.t()) => any}}
-      def unify(_u, v, _s) when not is_map(v) do
-        :error
-      end
-
-      def unify(u, v, s) do
-        [kf | _kt] = Map.keys(u)
-
-        if vf = Map.get(v, kf) do
-          case Substitution.unify(Map.get(u, kf), vf, s) do
-            :error -> :error
-            {:ok, s} -> Substitution.unify(Map.delete(u, kf), Map.delete(v, kf), s)
-          end
-        else
-          :error
-        end
-      end
-    end
-  end
 end
