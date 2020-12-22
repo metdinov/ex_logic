@@ -9,14 +9,13 @@ defmodule ExLogic.Goals do
     - #u is represented as fail/0
   """
 
-  import ExLogic
-  alias ExLogic.Var
+  alias ExLogic.{Substitution, Var}
 
-  @type stream :: maybe_improper_list(ExLogic.substitution(), stream) | suspension()
+  @type stream :: maybe_improper_list(Substitution.t(), stream) | suspension()
 
   @type suspension :: (() -> stream())
 
-  @type goal :: (ExLogic.substitution() -> stream())
+  @type goal :: (Substitution.t() -> stream())
 
   @doc """
   The goal that always succeeds.
@@ -64,7 +63,7 @@ defmodule ExLogic.Goals do
   @spec eq(ExLogic.value(), ExLogic.value()) :: goal()
   def eq(u, v) do
     fn s ->
-      case unify(u, v, s) do
+      case Substitution.unify(u, v, s) do
         {:ok, s} -> [s]
         :error -> []
       end
@@ -170,20 +169,12 @@ defmodule ExLogic.Goals do
       iex> Enum.map(g.(ExLogic.empty_s), rf)
       [:olive, :oil]
   """
-  @spec reify(ExLogic.value()) :: (ExLogic.substitution() -> ExLogic.substitution())
+  @spec reify(ExLogic.value()) :: (Substitution.t() -> Substitution.t())
   def reify(v) do
     fn s ->
-      v = walk_all(v, s)
-      r = reify_s(v, empty_s())
-      walk_all(v, r)
-    end
-  end
-
-  @spec walk_all(ExLogic.value(), ExLogic.substitution()) :: ExLogic.value()
-  defp walk_all(v, r) do
-    case walk(v, r) do
-      [h | t] -> [walk_all(h, r) | walk_all(t, r)]
-      v -> v
+      v = Substitution.walk_all(v, s)
+      r = reify_s(v, Substitution.empty_s())
+      Substitution.walk_all(v, r)
     end
   end
 
@@ -196,9 +187,9 @@ defmodule ExLogic.Goals do
       iex> reify_s(x, %{x => :pear})
       %{x => "_0"}
   """
-  @spec reify_s(ExLogic.value(), ExLogic.substitution()) :: ExLogic.substitution()
+  @spec reify_s(ExLogic.value(), Substitution.t()) :: Substitution.t()
   def reify_s(v, s) do
-    case walk(v, s) do
+    case Substitution.walk(v, s) do
       %Var{} = v -> Map.put(s, v, reify_name(map_size(s)))
       [h | t] -> reify_s(t, reify_s(h, s))
       _ -> s
@@ -223,7 +214,7 @@ defmodule ExLogic.Goals do
       ]
 
   """
-  @spec take(non_neg_integer(), stream()) :: [ExLogic.substitution()]
+  @spec take(non_neg_integer(), stream()) :: [Substitution.t()]
   def take(0, _stream) do
     []
   end
@@ -252,6 +243,22 @@ defmodule ExLogic.Goals do
       ]
 
   """
-  @spec take_all(stream()) :: [ExLogic.substitution()]
+  @spec take_all(stream()) :: [Substitution.t()]
   def take_all(stream), do: take(length(stream), stream)
+
+  @doc """
+  Returns the list of `n` substitutions that would make goal `g` succeed.
+
+  ## Examples
+
+      iex> x = Var.new("x")
+      iex> g = disj(eq(x, :olive), eq(x, :oil))
+      iex> run_goal(1, g)
+      [%{#ExLogic.Var<name: "x", ...> => :olive}]
+
+  """
+  @spec run_goal(non_neg_integer(), goal()) :: [ExLogic.value()]
+  def run_goal(n, g) do
+    take(n, g.(Substitution.empty_s()))
+  end
 end
