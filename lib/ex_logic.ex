@@ -22,9 +22,9 @@ defmodule ExLogic do
 
       iex> x = Var.new("x")
       iex> g = disj do
-      ...>    Goals.eq(x, :olive)
-      ...>    Goals.eq(x, :oil)
-      ...>    Goals.eq(x, :garlic)
+      ...>   Goals.eq(x, :olive)
+      ...>   Goals.eq(x, :oil)
+      ...>   Goals.eq(x, :garlic)
       ...> end
       iex> g.(Substitution.empty_s)
       [
@@ -32,7 +32,6 @@ defmodule ExLogic do
         %{#ExLogic.Var<name: "x", ...> => :olive},
         %{#ExLogic.Var<name: "x", ...> => :oil}
       ]
-
 
   """
   defmacro disj(do: body) do
@@ -44,10 +43,10 @@ defmodule ExLogic do
 
   ## Examples
 
-      iex> x = Var.new("x")
+      iex> {x, y} = {Var.new("x"), Var.new("y")}
       iex> g = conj do
-      ...>    Goals.eq(x, :olive)
-      ...>    Goals.eq(y, x)
+      ...>   Goals.eq(x, :olive)
+      ...>   Goals.eq(y, x)
       ...> end
       iex> g.(Substitution.empty_s)
       [
@@ -62,7 +61,7 @@ defmodule ExLogic do
     apply_goal(:conj, body)
   end
 
-  @spec apply_goal(atom(), term()) :: tuple()
+  @spec apply_goal(atom(), term()) :: Macro.t()
   defp apply_goal(goal, body) do
     case body do
       {:__block__, _, [g]} ->
@@ -84,6 +83,60 @@ defmodule ExLogic do
         quote do
           unquote(v)
         end
+    end
+  end
+
+  @doc """
+  Takes a list of variables and a list of goals.
+  It creates fresh variables and returns the conjunction of the list of goals.
+
+  The following expression:
+
+      fresh([x, y, z]) do
+        Goals.eq(x, :olive)
+        Goals.eq(y, :oil)
+        Goals.eq(z, :garlic)
+      end
+
+  is equivalent to:
+
+      alias ExLogic.Goals
+
+      Goals.call_with_fresh fn x ->
+        Goals.call_with_fresh fn y ->
+          Goals.call_with_fresh fn z ->
+            conj do
+              Goals.eq(x, :olive)
+              Goals.eq(y, :oil)
+              Goals.eq(z, :garlic)
+            end
+          end
+        end
+      end
+
+  ## Examples
+
+      iex> g = fresh([x, y]) do
+      ...>   Goals.eq(x, :garlic)
+      ...>   Goals.eq(y, :oil)
+      ...> end
+      iex> g.(Substitution.empty)
+      [%{#ExLogic.Var<name: :x, ...> => :garlic, #ExLogic.Var<name: :y, ...> => :oil}]
+
+  """
+  defmacro fresh([], goals) do
+    quote do
+      ExLogic.conj(unquote(goals))
+    end
+  end
+
+  defmacro fresh([h | t], goals) do
+    {name, _, _} = h
+
+    quote do
+      ExLogic.Goals.call_with_fresh(unquote(name), fn unquote(h) ->
+        ExLogic.fresh(unquote(t), unquote(goals))
+      end)
     end
   end
 end
