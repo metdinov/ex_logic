@@ -11,17 +11,52 @@ defmodule ExLogic.GoalsTest do
   describe "run_goal/2 tests" do
     test "run_goal/2 works with disjunctions" do
       x = Var.new("x")
-      g = ExLogic.disj do
-        eq(x, :olive)
-        eq(x, :oil)
-      end
-      results = run_goal(1, g)
+
+      goal =
+        ExLogic.disj do
+          eq(x, :olive)
+          eq(x, :oil)
+        end
+
+      results = run_goal(1, goal)
 
       assert length(results) == 1
 
       [result] = results
       assert Enum.member?(Map.keys(result), x)
       assert result[x] == :olive
+    end
+
+    test "run_goal/2 works with conjunctions" do
+      x = Var.new("x")
+
+      goal =
+        ExLogic.conj do
+          eq(x, :olive)
+          eq(x, :oil)
+        end
+
+      results = run_goal(1, goal)
+      assert Enum.empty?(results)
+    end
+
+    test "run_goal/2 can return multiple results" do
+      x = Var.new("x")
+      y = Var.new("y")
+
+      goal =
+        ExLogic.disj do
+          eq(x, :olive)
+          eq(y, :oil)
+        end
+
+      results = run_goal(2, goal)
+
+      assert length(results) == 2
+
+      [result1, result2] = results
+      assert result1[x] == :olive
+      assert result2[y] == :oil
     end
   end
 end
