@@ -70,12 +70,12 @@ defmodule ExLogic do
         end
 
       {:__block__, _, [h | t]} ->
-        next = {:__block__, [], t}
+        next_block = make_block(t)
 
         quote do
           apply(ExLogic.Goals, unquote(goal), [
             unquote(h),
-            ExLogic.unquote(goal)(do: unquote(next))
+            ExLogic.unquote(goal)(do: unquote(next_block))
           ])
         end
 
@@ -99,8 +99,6 @@ defmodule ExLogic do
       end
 
   is equivalent to:
-
-      alias ExLogic.Goals
 
       Goals.call_with_fresh fn x ->
         Goals.call_with_fresh fn y ->
@@ -138,5 +136,78 @@ defmodule ExLogic do
         ExLogic.fresh(unquote(t), unquote(goals))
       end)
     end
+  end
+
+  @doc """
+  Takes a list of lists goals. It performs a disjunction of the conjunctions.
+
+  The following expression:
+
+      conde do
+        [Goals.eq(x, :olive), Goals.eq(y, :oil)]
+        [Goals.eq(x, y)]
+      end
+
+  is equivalent to:
+
+      disj do
+        conj do
+          Goals.eq(x, :olive)
+          Goals.eq(y, :oil)
+        end
+        conj do
+          Goals.eq(x, y)
+        end
+      end
+
+  ## Examples
+
+      iex> {x, y} = {Var.new("x"), Var.new("y")}
+      iex> g = conde do
+      ...>   [Goals.eq(x, :garlic), Goals.eq(y, x)]
+      ...>   [Goals.eq(y, :oil)]
+      ...> end
+      iex> g.(Substitution.empty)
+      [
+        %{
+          #ExLogic.Var<name: "x", ...> => :garlic,
+          #ExLogic.Var<name: "y", ...> => :garlic
+        },
+        %{#ExLogic.Var<name: "y", ...> => :oil}
+      ]
+
+  """
+  defmacro conde(do: body) do
+    case body do
+      {:__block__, _, [gs]} ->
+        conj_block = make_block(gs)
+
+        quote do
+          ExLogic.conj(do: unquote(conj_block))
+        end
+
+      {:__block__, _, [h | t]} ->
+        next_block = make_block(t)
+        conj_block = make_block(h)
+
+        quote do
+          ExLogic.Goals.disj(
+            ExLogic.conj(do: unquote(conj_block)),
+            ExLogic.conde(do: unquote(next_block))
+          )
+        end
+
+      gs ->
+        conj_block = make_block(gs)
+
+        quote do
+          ExLogic.conj(do: unquote(conj_block))
+        end
+    end
+  end
+
+  @spec make_block(term()) :: tuple()
+  defp make_block(v) do
+    {:__block__, [], v}
   end
 end
