@@ -9,18 +9,21 @@ defmodule ExLogic.Var do
   @enforce_keys [:name, :__ref__]
   defstruct [:name, :__ref__]
 
-  @type t :: %Var{name: String.t(), __ref__: reference()}
+  @type t :: %Var{name: String.t() | atom(), __ref__: reference()}
 
   @doc """
   Returns a new variable with the given (optional) name.
 
   ## Example
 
-    iex> Var.new("x")
-    #ExLogic.Var<name: "x", ...>
+    iex> Var.new(:x)
+    #ExLogic.Var<name: :x, ...>
+
+    iex> Var.new()
+    #ExLogic.Var<name: "unnamed", ...>
   """
   @spec new(name :: String.t()) :: Var.t()
-  def new(name \\ "unnamed") when is_binary(name) do
+  def new(name \\ "unnamed") when is_binary(name) or is_atom(name) do
     %Var{name: name, __ref__: make_ref()}
   end
 end
