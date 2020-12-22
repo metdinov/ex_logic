@@ -4,7 +4,7 @@ defmodule ExLogicTest do
   import ExLogic
   alias ExLogic.{Substitution, Var}
 
-  doctest ExLogic, except: [:moduledoc, conj: 1, disj: 1, run_goal: 2]
+  doctest ExLogic, except: [:moduledoc, conj: 1, disj: 1]
   doctest ExLogic.Var
 
   describe "walk/2 tests" do
