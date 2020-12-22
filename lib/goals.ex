@@ -148,7 +148,7 @@ defmodule ExLogic.Goals do
 
       iex> f = fn fruit -> eq(:plum, fruit) end
       iex> g = call_with_fresh("kiwi", f)
-      iex> g.(ExLogic.empty_s)
+      iex> g.(ExLogic.Substitution.empty_s)
       [%{#Var<name: "kiwi", ...> => :plum}]
 
   """

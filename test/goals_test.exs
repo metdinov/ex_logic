@@ -3,7 +3,7 @@ defmodule ExLogic.GoalsTest do
 
   require ExLogic
   import ExLogic.Goals
-  alias ExLogic.Var
+  alias ExLogic.{Substitution, Var}
 
   doctest ExLogic.Goals,
     except: [:moduledoc, call_with_fresh: 2, take: 2, take_all: 1, conj: 2, disj: 2, run_goal: 2]
@@ -57,6 +57,19 @@ defmodule ExLogic.GoalsTest do
       [result1, result2] = results
       assert result1[x] == :olive
       assert result2[y] == :oil
+    end
+  end
+
+  describe "call_with_fresh/2 tests" do
+    test "can construct a goal with call_with_fresh/2" do
+      fun = fn fruit -> eq(:plum, fruit) end
+      goal = call_with_fresh("kiwi", fun)
+      results = goal.(Substitution.empty_s())
+
+      assert length(results) == 1
+      [result] = results
+
+      assert assert Enum.member?(Map.values(result), :plum)
     end
   end
 end

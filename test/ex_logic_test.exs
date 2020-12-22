@@ -1,7 +1,6 @@
 defmodule ExLogicTest do
   use ExUnit.Case
 
-  import ExLogic
   alias ExLogic.{Substitution, Var}
 
   doctest ExLogic, except: [:moduledoc, conj: 1, disj: 1]
