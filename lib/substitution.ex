@@ -176,8 +176,24 @@ defmodule ExLogic.Substitution do
     end
 
     defimpl Unify, for: Map do
-      def unify(_u, _v, _s) do
+      alias ExLogic.Substitution
+
+      @spec unify(any, any, any) :: :error | {:ok, %{optional(ExLogic.Var.t()) => any}}
+      def unify(_u, v, _s) when not is_map(v) do
         :error
+      end
+
+      def unify(u, v, s) do
+        [kf | _kt] = Map.keys(u)
+
+        if vf = Map.get(v, kf) do
+          case Substitution.unify(Map.get(u, kf), vf, s) do
+            :error -> :error
+            {:ok, s} -> Substitution.unify(Map.delete(u, kf), Map.delete(v, kf), s)
+          end
+        else
+          :error
+        end
       end
     end
   end
