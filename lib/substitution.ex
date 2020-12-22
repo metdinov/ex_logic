@@ -9,6 +9,7 @@ defmodule ExLogic.Substitution do
 
   alias __MODULE__
   alias ExLogic.Var
+  alias __MODULE__.Unify
 
   @type t :: %{required(Var.t()) => ExLogic.ExLogic.value()}
 
@@ -134,21 +135,50 @@ defmodule ExLogic.Substitution do
     v = walk(v, s)
 
     cond do
-      u === v -> {:ok, s}
-      var?(u) -> extend_s(u, v, s)
-      var?(v) -> extend_s(v, u, s)
-      is_list(u) and is_list(v) -> unify_lists(u, v, s)
-      true -> :error
+      u === v ->
+        {:ok, s}
+
+      var?(u) ->
+        extend_s(u, v, s)
+
+      var?(v) ->
+        extend_s(v, u, s)
+
+      Unify.impl_for(u) ->
+        Unify.unify(u, v, s)
+
+      true ->
+        :error
     end
   end
 
   defp var?(%Var{}), do: true
   defp var?(_), do: false
 
-  defp unify_lists([hu | tu], [hv | tv], s) do
-    case unify(hu, hv, s) do
-      :error -> :error
-      {:ok, s} -> unify(tu, tv, s)
+  defprotocol Unify do
+    @spec unify(any, any, any) :: any
+    def unify(u, v, s)
+  end
+
+  defimpl Unify, for: List do
+    alias ExLogic.Substitution
+
+    @spec unify(any, any, any) :: :error | {:ok, %{optional(ExLogic.Var.t()) => any}}
+    def unify(_u, v, _s) when not is_list(v) do
+      :error
+    end
+
+    def unify([hu | tu], [hv | tv], s) do
+      case Substitution.unify(hu, hv, s) do
+        :error -> :error
+        {:ok, s} -> Substitution.unify(tu, tv, s)
+      end
+    end
+
+    defimpl Unify, for: Map do
+      def unify(_u, _v, _s) do
+        :error
+      end
     end
   end
 end
