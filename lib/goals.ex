@@ -24,8 +24,9 @@ defmodule ExLogic.Goals do
 
       iex> x = Var.new("x")
       iex> g = succeed()
-      iex> g.(%{x => :olive})
-      [%{x => :olive}]
+      iex> result = g.(%{x => :olive})
+      iex> result == [%{x => :olive}]
+      true
 
   """
   @spec succeed() :: goal()
@@ -57,8 +58,10 @@ defmodule ExLogic.Goals do
 
       iex> x = Var.new("x")
       iex> g = eq(x, [1])
-      iex> g.(%{})
-      [%{x => [1]}]
+      iex> result = g.(%{})
+      iex> result == [%{x => [1]}]
+      true
+
   """
   @spec eq(ExLogic.value(), ExLogic.value()) :: goal()
   def eq(u, v) do
@@ -113,7 +116,7 @@ defmodule ExLogic.Goals do
       iex> x = Var.new("x")
       iex> g1 = eq(x, :olive)
       iex> g2 = eq(x, :oil)
-      iex> disj(g1, g2)
+      iex> conj(g1, g2)
       []
 
   """
@@ -144,8 +147,8 @@ defmodule ExLogic.Goals do
   ## Examples
 
       iex> f = fn fruit -> eq(:plum, fruit) end
-      iex> g = call_with_fresh(:kiwi, f)
-      iex> g.(ExLogic.empty_s)
+      iex> g = call_with_fresh("kiwi", f)
+      iex> g.(ExLogic.Substitution.empty_s)
       [%{#Var<name: "kiwi", ...> => :plum}]
 
   """
@@ -166,7 +169,7 @@ defmodule ExLogic.Goals do
       iex> x = Var.new("x")
       iex> rf = reify(x)
       iex> g = disj(eq(x, :olive), eq(x, :oil))
-      iex> Enum.map(g.(ExLogic.empty_s), rf)
+      iex> Enum.map(g.(ExLogic.Substitution.empty_s), rf)
       [:olive, :oil]
   """
   @spec reify(ExLogic.value()) :: (Substitution.t() -> Substitution.t())
@@ -184,8 +187,10 @@ defmodule ExLogic.Goals do
   ## Examples
 
       iex> x = Var.new("x")
-      iex> reify_s(x, %{x => :pear})
-      %{x => "_0"}
+      iex> result = reify_s(x, %{x => :pear})
+      iex> result == %{x => :pear}
+      true
+
   """
   @spec reify_s(ExLogic.value(), Substitution.t()) :: Substitution.t()
   def reify_s(v, s) do
@@ -207,6 +212,7 @@ defmodule ExLogic.Goals do
       iex> x = Var.new("x")
       iex> take(1, [%{x => :olive}, %{x => :oil}])
       [%{#Var<name: "x", ...> => :olive}]
+
       iex> take(2, [%{x => :olive}, %{x => :oil}])
       [
         %{#Var<name: "x", ...> => :olive},

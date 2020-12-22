@@ -118,7 +118,7 @@ defmodule ExLogic.Substitution do
 
   ## Examples
 
-      iex> ExLogic.unify(:foo, :bar, ExLogic.empty_s)
+      iex> ExLogic.Substitution.unify(:foo, :bar, empty_s)
       :error
 
       iex> x = Var.new("x")
