@@ -122,8 +122,9 @@ defmodule ExLogic do
 
       iex> x = Var.new("x")
       iex> y = Var.new("y")
-      iex> unify([x], y, %{y => [1]})
-      {:ok, %{x => 1, y => [1]}}
+      iex> result = unify([x], y, %{y => [1]})
+      iex> result == {:ok, %{x => 1, y => [1]}}
+      true
 
   """
   @spec unify(value(), value(), substitution()) :: {:ok, substitution()} | :error
