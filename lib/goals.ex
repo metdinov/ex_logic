@@ -122,7 +122,7 @@ defmodule ExLogic.Goals do
   """
   @spec conj(goal(), goal()) :: goal()
   def conj(g1, g2) do
-     fn s ->
+    fn s ->
       append_map(g2, g1.(s))
     end
   end
