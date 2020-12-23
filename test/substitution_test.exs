@@ -14,7 +14,7 @@ defmodule ExLogic.SubstitutionTest do
 
   describe "unify/3 tests" do
     test "returns error on non-unifiable values (doctest)" do
-      assert(unify(:foo, :bar, empty_s())) == :error
+      assert unify(:foo, :bar, empty_s()) == :error
     end
 
     test "extends the substitution correctly on unifiable values (doctest)" do
@@ -22,7 +22,7 @@ defmodule ExLogic.SubstitutionTest do
       y = Var.new("y")
 
       result = unify([x], y, %{y => [1]})
-      assert result = {:ok, %{x => 1, y => [1]}}
+      assert result == {:ok, %{x => 1, y => [1]}}
     end
   end
 end
