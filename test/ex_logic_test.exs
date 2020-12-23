@@ -51,9 +51,6 @@ defmodule ExLogicTest do
 
   describe "fresh macro tests" do
     test "returns the correct conjunction (doctest)" do
-      Var.new("x")
-      Var.new("y")
-
       g =
         fresh([x, y]) do
           Goals.eq(x, :garlic)
@@ -88,6 +85,21 @@ defmodule ExLogicTest do
                },
                %{y => :oil}
              ]
+    end
+  end
+
+  describe "run_all/1 macro tests" do
+    test "values are returned in the correct order" do
+      g =
+        run_all([x, y]) do
+          disj do
+            eq(x, "garlic")
+            eq(x, :olive)
+            eq(y, :oil)
+          end
+        end
+
+      assert g == [["garlic", :olive], [:oil]]
     end
   end
 end

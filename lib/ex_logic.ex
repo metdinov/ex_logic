@@ -291,14 +291,12 @@ defmodule ExLogic do
         Enum.map(Map.keys(s), fn var -> ExLogic.Goals.reify(var) end)
       end)
       |> List.flatten()
-      |> MapSet.new()
-      |> MapSet.to_list()
+      |> Enum.uniq()
 
     Enum.map(reified_vars, fn var -> Enum.map(substitutions, var) end)
     |> Enum.map(fn names ->
-      Enum.reject(names, fn name -> not valid?(name) end)
-      |> MapSet.new()
-      |> MapSet.to_list()
+      Enum.filter(names, fn name -> valid?(name) end)
+      |> Enum.uniq()
     end)
   end
 
