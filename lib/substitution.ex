@@ -8,7 +8,7 @@ defmodule ExLogic.Substitution do
   """
 
   alias __MODULE__
-  alias ExLogic.Var
+  alias ExLogic.{Var, Unify}
 
   @type t :: %{required(Var.t()) => ExLogic.ExLogic.value()}
 
@@ -137,18 +137,10 @@ defmodule ExLogic.Substitution do
       u === v -> {:ok, s}
       var?(u) -> extend_s(u, v, s)
       var?(v) -> extend_s(v, u, s)
-      is_list(u) and is_list(v) -> unify_lists(u, v, s)
-      true -> :error
+      true -> Unify.unify(u, v, s)
     end
   end
 
   defp var?(%Var{}), do: true
   defp var?(_), do: false
-
-  defp unify_lists([hu | tu], [hv | tv], s) do
-    case unify(hu, hv, s) do
-      :error -> :error
-      {:ok, s} -> unify(tu, tv, s)
-    end
-  end
 end
