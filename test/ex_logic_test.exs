@@ -5,12 +5,6 @@ defmodule ExLogicTest do
   doctest ExLogic, except: [:moduledoc, conj: 1, disj: 1, fresh: 2, conde: 1]
   doctest ExLogic.Var
 
-  describe "walk/2 tests" do
-    test "when the first argument is not a variable, it returns it" do
-      assert Substitution.walk(:value, %{}) == :value
-    end
-  end
-
   describe "conj macro tests" do
     test "expands correctly (doctest)" do
       {x, y} = {Var.new("x"), Var.new("y")}
