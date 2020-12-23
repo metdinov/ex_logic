@@ -3,8 +3,6 @@ defmodule ExLogic do
   Implements the basic operations of miniKanren as explained in 'The Reasoned Schemer'.
   """
 
-  alias ExLogic.{Goals, Substitution, Var}
-
   @type value ::
           atom()
           | number()
@@ -15,6 +13,14 @@ defmodule ExLogic do
           | map()
           | [value()]
 
+  defmacro __using__(opts) do
+    quote do
+      import ExLogic, unquote(opts)
+      import ExLogic.Goals, only: [eq: 2]
+      import ExLogic.Substitution, only: [empty_s: 0]
+    end
+  end
+
   @doc """
   Takes a list of goals and performs an expansion with `ExLogic.Goals.disj/2`.
 
@@ -22,9 +28,9 @@ defmodule ExLogic do
 
       iex> x = Var.new("x")
       iex> g = disj do
-      ...>   Goals.eq(x, :olive)
-      ...>   Goals.eq(x, :oil)
-      ...>   Goals.eq(x, :garlic)
+      ...>   eq(x, :olive)
+      ...>   eq(x, :oil)
+      ...>   eq(x, :garlic)
       ...> end
       iex> g.(Substitution.empty_s)
       [
@@ -45,8 +51,8 @@ defmodule ExLogic do
 
       iex> {x, y} = {Var.new("x"), Var.new("y")}
       iex> g = conj do
-      ...>   Goals.eq(x, :olive)
-      ...>   Goals.eq(y, x)
+      ...>   eq(x, :olive)
+      ...>   eq(y, x)
       ...> end
       iex> g.(Substitution.empty_s)
       [
@@ -93,9 +99,9 @@ defmodule ExLogic do
   The following expression:
 
       fresh([x, y, z]) do
-        Goals.eq(x, :olive)
-        Goals.eq(y, :oil)
-        Goals.eq(z, :garlic)
+        eq(x, :olive)
+        eq(y, :oil)
+        eq(z, :garlic)
       end
 
   is equivalent to:
@@ -104,9 +110,9 @@ defmodule ExLogic do
         Goals.call_with_fresh fn y ->
           Goals.call_with_fresh fn z ->
             conj do
-              Goals.eq(x, :olive)
-              Goals.eq(y, :oil)
-              Goals.eq(z, :garlic)
+              eq(x, :olive)
+              eq(y, :oil)
+              eq(z, :garlic)
             end
           end
         end
@@ -115,8 +121,8 @@ defmodule ExLogic do
   ## Examples
 
       iex> g = fresh([x, y]) do
-      ...>   Goals.eq(x, :garlic)
-      ...>   Goals.eq(y, :oil)
+      ...>   eq(x, :garlic)
+      ...>   eq(y, :oil)
       ...> end
       iex> g.(Substitution.empty_s)
       [%{#ExLogic.Var<name: :x, ...> => :garlic, #ExLogic.Var<name: :y, ...> => :oil}]
@@ -144,19 +150,19 @@ defmodule ExLogic do
   The following expression:
 
       conde do
-        [Goals.eq(x, :olive), Goals.eq(y, :oil)]
-        [Goals.eq(x, y)]
+        [eq(x, :olive), eq(y, :oil)]
+        [eq(x, y)]
       end
 
   is equivalent to:
 
       disj do
         conj do
-          Goals.eq(x, :olive)
-          Goals.eq(y, :oil)
+          eq(x, :olive)
+          eq(y, :oil)
         end
         conj do
-          Goals.eq(x, y)
+          eq(x, y)
         end
       end
 
@@ -164,8 +170,8 @@ defmodule ExLogic do
 
       iex> {x, y} = {Var.new("x"), Var.new("y")}
       iex> g = conde do
-      ...>   [Goals.eq(x, :garlic), Goals.eq(y, x)]
-      ...>   [Goals.eq(y, :oil)]
+      ...>   [eq(x, :garlic), eq(y, x)]
+      ...>   [eq(y, :oil)]
       ...> end
       iex> g.(Substitution.empty)
       [
@@ -221,16 +227,16 @@ defmodule ExLogic do
 
       iex> run(2, [x, y]) do
       ...>   disj do
-      ...>    Goals.eq(x, :olive)
-      ...>    Goals.eq(y, :oil)
+      ...>    eq(x, :olive)
+      ...>    eq(y, :oil)
       ...>   end
       ...> end
       [[:olive], [:oil]]
 
       iex> run(1, [x]) do
       ...>   disj do
-      ...>    Goals.eq(x, :olive)
-      ...>    Goals.eq(x, :oil)
+      ...>    eq(x, :olive)
+      ...>    eq(x, :oil)
       ...>   end
       ...> end
       [[:olive]]
@@ -240,7 +246,7 @@ defmodule ExLogic do
     quote do
       g = ExLogic.fresh(unquote(vars), unquote(goals))
 
-      Goals.run_goal(unquote(n), g)
+      ExLogic.Goals.run_goal(unquote(n), g)
       |> names_from_substitutions()
     end
   end
@@ -253,8 +259,8 @@ defmodule ExLogic do
 
       iex> run_all([x, y]) do
       ...>  disj do
-      ...>    Goals.eq(x, :olive)
-      ...>    Goals.eq(y, :oil)
+      ...>    eq(x, :olive)
+      ...>    eq(y, :oil)
       ...>  end
       ...> end
       [[:olive], [:oil]]
@@ -262,14 +268,14 @@ defmodule ExLogic do
   defmacro run_all(vars, goals) do
     quote do
       ExLogic.fresh(unquote(vars), unquote(goals))
-      |> Goals.run_all()
+      |> ExLogic.Goals.run_all()
       |> names_from_substitutions()
     end
   end
 
   def names_from_substitutions(substitutions) do
     reified_vars =
-      Enum.map(substitutions, fn s -> Enum.map(Map.keys(s), fn var -> Goals.reify(var) end) end)
+      Enum.map(substitutions, fn s -> Enum.map(Map.keys(s), fn var -> ExLogic.Goals.reify(var) end) end)
       |> List.flatten()
       |> MapSet.new()
       |> MapSet.to_list()
