@@ -44,6 +44,12 @@ defmodule ExLogic do
     apply_goal(:disj, body)
   end
 
+  defmacro disj(goals) do
+    quote do
+      Enum.reduce(unquote(goals), &ExLogic.Goals.disj/2)
+    end
+  end
+
   @doc """
   Takes a list of goals and performs an expansion with `ExLogic.Goals.conj/2`.
 
@@ -67,6 +73,12 @@ defmodule ExLogic do
     apply_goal(:conj, body)
   end
 
+  defmacro conj(goals) do
+    quote do
+      Enum.reduce(unquote(goals), &ExLogic.Goals.conj/2)
+    end
+  end
+
   @spec apply_goal(atom(), term()) :: Macro.t()
   defp apply_goal(goal, body) do
     case body do
@@ -85,9 +97,9 @@ defmodule ExLogic do
           ])
         end
 
-      v ->
+      g ->
         quote do
-          unquote(v)
+          unquote(g)
         end
     end
   end
