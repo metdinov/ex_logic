@@ -118,7 +118,7 @@ defmodule ExLogic do
       ...>   Goals.eq(x, :garlic)
       ...>   Goals.eq(y, :oil)
       ...> end
-      iex> g.(Substitution.empty)
+      iex> g.(Substitution.empty_s)
       [%{#ExLogic.Var<name: :x, ...> => :garlic, #ExLogic.Var<name: :y, ...> => :oil}]
 
   """
@@ -209,5 +209,82 @@ defmodule ExLogic do
   @spec make_block(term()) :: tuple()
   defp make_block(v) do
     {:__block__, [], v}
+  end
+
+  @doc """
+  Takes a number n, a list of variables and a list of goals.
+  Calls fresh on the list of variables and goals, then runs the resulting goal
+  to obtain n substitutions that make it succeed; finally, it returns the
+  values of those substitutions.
+
+  ## Examples
+
+      iex> run(1, [x,y]) do
+      ...>   Goals.eq(x, :olive)
+      ...>   Goals.eq(y, :oil)
+      ...> end
+      [[:olive], [:oil]]
+
+      iex> run(1, [x]) do
+      ...>   disj do
+      ...>     Goals.eq(x, :olive)
+      ...>     Goals.eq(x, :oil))
+      ...>   end
+      ...> end
+      [[:olive]]
+
+  """
+  defmacro run(n, vars, goals) do
+    quote do
+      g = ExLogic.fresh(unquote(vars), unquote(goals))
+
+      Goals.run_goal(unquote(n), g)
+      |> names_from_substitutions()
+    end
+  end
+
+  @doc """
+  Same as run, except ALL values of the substitutions that make the
+  resulting goal succeed are returned.
+
+  ## Examples
+
+      iex> run_all([x, y])
+      ...>  disj do
+      ...>    Goals.eq(x, :olive)
+      ...>    Goals.eq(y, :oil))
+      ...>  end
+      ...> end
+      [[:olive], [:oil]]
+  """
+  defmacro run_all(vars, goals) do
+    quote do
+      ExLogic.fresh(unquote(vars), unquote(goals))
+      |> Goals.run_all()
+      |> names_from_substitutions()
+    end
+  end
+
+  def names_from_substitutions(substitutions) do
+    reified_vars =
+      Enum.map(substitutions, fn s -> Enum.map(Map.keys(s), fn var -> Goals.reify(var) end) end)
+      |> List.flatten()
+      |> MapSet.new()
+      |> MapSet.to_list()
+
+    Enum.map(reified_vars, fn var -> Enum.map(substitutions, var) end)
+    |> Enum.map(fn names ->
+      Enum.reject(names, fn name -> not valid?(name) end)
+      |> MapSet.new()
+      |> MapSet.to_list()
+    end)
+  end
+
+  def valid?(name) when is_binary(name) do
+    not String.starts_with?(name, "_")
+  end
+
+  def valid?(_name) do
+    true
   end
 end

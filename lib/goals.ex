@@ -266,4 +266,23 @@ defmodule ExLogic.Goals do
   def run_goal(n, g) do
     take(n, g.(Substitution.empty_s()))
   end
+
+  @doc """
+  Returns ALL substitutions that would make goal `g` succeed.
+
+  ## Examples
+
+      iex> x = Var.new("x")
+      iex> g = disj(eq(x, :olive), eq(x, :oil))
+      iex> run_all(g)
+      [
+        %{#ExLogic.Var<name: "x", ...> => :olive},
+        %{#ExLogic.Var<name: "x", ...> => :oil}
+      ]
+
+  """
+  @spec run_all((any -> any)) :: [%{optional(ExLogic.Var.t()) => any}]
+  def run_all(g) do
+    take_all(g.(Substitution.empty_s()))
+  end
 end
