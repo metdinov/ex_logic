@@ -219,16 +219,18 @@ defmodule ExLogic do
 
   ## Examples
 
-      iex> run(1, [x,y]) do
-      ...>   Goals.eq(x, :olive)
-      ...>   Goals.eq(y, :oil)
+      iex> run(2, [x, y]) do
+      ...>   disj do
+      ...>    Goals.eq(x, :olive)
+      ...>    Goals.eq(y, :oil)
+      ...>   end
       ...> end
       [[:olive], [:oil]]
 
       iex> run(1, [x]) do
       ...>   disj do
-      ...>     Goals.eq(x, :olive)
-      ...>     Goals.eq(x, :oil))
+      ...>    Goals.eq(x, :olive)
+      ...>    Goals.eq(x, :oil)
       ...>   end
       ...> end
       [[:olive]]
@@ -249,10 +251,10 @@ defmodule ExLogic do
 
   ## Examples
 
-      iex> run_all([x, y])
+      iex> run_all([x, y]) do
       ...>  disj do
       ...>    Goals.eq(x, :olive)
-      ...>    Goals.eq(y, :oil))
+      ...>    Goals.eq(y, :oil)
       ...>  end
       ...> end
       [[:olive], [:oil]]

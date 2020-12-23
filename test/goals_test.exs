@@ -6,7 +6,16 @@ defmodule ExLogic.GoalsTest do
   alias ExLogic.{Substitution, Var}
 
   doctest ExLogic.Goals,
-    except: [:moduledoc, call_with_fresh: 2, take: 2, take_all: 1, conj: 2, disj: 2, run_goal: 2]
+    except: [
+      :moduledoc,
+      call_with_fresh: 2,
+      take: 2,
+      take_all: 1,
+      conj: 2,
+      disj: 2,
+      run_goal: 2,
+      run_all: 1
+    ]
 
   describe "run_goal/2 tests" do
     test "run_goal/2 works with disjunctions" do
