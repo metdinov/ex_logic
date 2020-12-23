@@ -275,7 +275,9 @@ defmodule ExLogic do
 
   def names_from_substitutions(substitutions) do
     reified_vars =
-      Enum.map(substitutions, fn s -> Enum.map(Map.keys(s), fn var -> ExLogic.Goals.reify(var) end) end)
+      Enum.map(substitutions, fn s ->
+        Enum.map(Map.keys(s), fn var -> ExLogic.Goals.reify(var) end)
+      end)
       |> List.flatten()
       |> MapSet.new()
       |> MapSet.to_list()

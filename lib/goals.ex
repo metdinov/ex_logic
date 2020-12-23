@@ -80,7 +80,8 @@ defmodule ExLogic.Goals do
       iex> x = Var.new("x")
       iex> g1 = eq(x, :olive)
       iex> g2 = eq(x, :oil)
-      iex> disj(g1, g2)
+      iex> g = disj(g1, g2)
+      iex> g.(Substitution.empty_s())
       [
         %{#Var<name: "x", ...> => :olive},
         %{#Var<name: "x", ...> => :oil}
@@ -115,7 +116,8 @@ defmodule ExLogic.Goals do
       iex> x = Var.new("x")
       iex> g1 = eq(x, :olive)
       iex> g2 = eq(x, :oil)
-      iex> conj(g1, g2)
+      iex> g = conj(g1, g2)
+      iex> g.(Substitution.empty_s())
       []
 
   """
