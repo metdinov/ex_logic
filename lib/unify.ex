@@ -4,6 +4,8 @@ defprotocol ExLogic.Unify do
   """
   alias ExLogic.Substitution
 
+  @fallback_to_any true
+
   @spec unify(any(), any(), Substitution.t()) :: {:ok, ExLogic.Substitution.t()} | :error
   def unify(u, v, s)
 end

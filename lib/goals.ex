@@ -58,8 +58,7 @@ defmodule ExLogic.Goals do
 
       iex> x = Var.new("x")
       iex> g = eq(x, [1])
-      iex> result = g.(%{})
-      iex> result == [%{x => [1]}]
+      iex> g.(%{}) == [%{x => [1]}]
       true
 
   """
