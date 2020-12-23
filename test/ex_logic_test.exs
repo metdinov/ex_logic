@@ -2,6 +2,12 @@ defmodule ExLogicTest do
   use ExUnit.Case
   use ExLogic
 
+  alias ExLogic.{
+    Var,
+    Goals,
+    Substitution
+  }
+
   doctest ExLogic, except: [:moduledoc, conj: 1, disj: 1, fresh: 2, conde: 1]
   doctest ExLogic.Var
 
@@ -45,8 +51,8 @@ defmodule ExLogicTest do
 
   describe "fresh macro tests" do
     test "returns the correct conjunction (doctest)" do
-      x = Var.new("x")
-      y = Var.new("y")
+      Var.new("x")
+      Var.new("y")
 
       g =
         fresh([x, y]) do
