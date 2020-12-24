@@ -121,11 +121,8 @@ defmodule ExLogic.GoalsTest do
       x = Var.new("x")
       stream = [%{x => :olive}, %{x => :oil}]
 
-      result = take(1, stream)
-      assert result == [%{x => :olive}]
-
-      result = take(2, stream)
-      assert result == stream
+      assert take(stream, 1) == [%{x => :olive}]
+      assert take(stream, 2) == stream
     end
   end
 

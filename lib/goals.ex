@@ -211,30 +211,36 @@ defmodule ExLogic.Goals do
   ## Examples
 
       iex> x = Var.new("x")
-      iex> take(1, [%{x => :olive}, %{x => :oil}])
+      iex> take([%{x => :olive}, %{x => :oil}], 1)
       [%{#Var<name: "x", ...> => :olive}]
 
-      iex> take(2, [%{x => :olive}, %{x => :oil}])
+      iex> take([%{x => :olive}, %{x => :oil}], 2)
       [
         %{#Var<name: "x", ...> => :olive},
         %{#Var<name: "x", ...> => :oil}
       ]
 
   """
-  @spec take(non_neg_integer(), stream()) :: [Substitution.t()]
-  def take(0, _stream) do
-    []
+  @spec take(stream(), non_neg_integer()) :: [Substitution.t()]
+  def take(stream, n) when is_integer(n) and n >= 0 do
+    take(stream, n, [])
   end
 
-  def take(_n, []) do
-    []
+  # Tail recursive `take`
+  defp take(_stream, 0, subs) do
+    Enum.reverse(subs)
   end
 
-  def take(n, stream) when n >= 1 do
-    case stream do
-      suspension when is_function(suspension) -> take(n, suspension.())
-      [h | t] -> [h | take(n - 1, t)]
-    end
+  defp take([], _n, subs) do
+    Enum.reverse(subs)
+  end
+
+  defp take(suspension, n, subs) when is_function(suspension) do
+    take(suspension.(), n, subs)
+  end
+
+  defp take([h | t], n, subs) do
+    take(t, n - 1, [h | subs])
   end
 
   @doc """
@@ -251,7 +257,7 @@ defmodule ExLogic.Goals do
 
   """
   @spec take_all(stream()) :: [Substitution.t()]
-  def take_all(stream), do: take(length(stream), stream)
+  def take_all(stream), do: take(stream, length(stream))
 
   @doc """
   Returns the list of `n` substitutions that would make goal `g` succeed.
@@ -266,11 +272,11 @@ defmodule ExLogic.Goals do
   """
   @spec run_goal(non_neg_integer(), goal()) :: [ExLogic.value()]
   def run_goal(n, g) do
-    take(n, g.(Substitution.empty_s()))
+    take(g.(Substitution.empty_s()), n)
   end
 
   @doc """
-  Returns ALL substitutions that would make goal `g` succeed.
+  Returns **all** substitutions that would make goal `g` succeed.
 
   ## Examples
 
@@ -283,7 +289,7 @@ defmodule ExLogic.Goals do
       ]
 
   """
-  @spec run_all((any -> any)) :: [%{optional(ExLogic.Var.t()) => any}]
+  @spec run_all(goal()) :: [%{optional(ExLogic.Var.t()) => any}]
   def run_all(g) do
     take_all(g.(Substitution.empty_s()))
   end
