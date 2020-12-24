@@ -26,7 +26,7 @@ defmodule ExLogic.GoalsTest do
           eq(x, :oil)
         end
 
-      results = run_goal(1, goal)
+      results = run_goal(goal, 1)
 
       assert length(results) == 1
 
@@ -44,7 +44,7 @@ defmodule ExLogic.GoalsTest do
           eq(x, :oil)
         end
 
-      results = run_goal(1, goal)
+      results = run_goal(goal, 1)
       assert Enum.empty?(results)
     end
 
@@ -58,7 +58,7 @@ defmodule ExLogic.GoalsTest do
           eq(y, :oil)
         end
 
-      results = run_goal(2, goal)
+      results = run_goal(goal, 2)
 
       assert length(results) == 2
 

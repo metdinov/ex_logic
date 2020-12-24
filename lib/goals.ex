@@ -266,12 +266,12 @@ defmodule ExLogic.Goals do
 
       iex> x = Var.new("x")
       iex> g = disj(eq(x, :olive), eq(x, :oil))
-      iex> run_goal(1, g)
+      iex> run_goal(g, 1)
       [%{#ExLogic.Var<name: "x", ...> => :olive}]
 
   """
-  @spec run_goal(non_neg_integer(), goal()) :: [ExLogic.value()]
-  def run_goal(n, g) do
+  @spec run_goal(goal(), non_neg_integer()) :: [Substitution.t()]
+  def run_goal(g, n) do
     take(g.(Substitution.empty_s()), n)
   end
 
@@ -289,7 +289,7 @@ defmodule ExLogic.Goals do
       ]
 
   """
-  @spec run_all(goal()) :: [%{optional(ExLogic.Var.t()) => any}]
+  @spec run_all(goal()) :: [Substitution.t()]
   def run_all(g) do
     take_all(g.(Substitution.empty_s()))
   end

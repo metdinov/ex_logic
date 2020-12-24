@@ -54,7 +54,7 @@ defmodule ExLogic.Substitution do
   @spec walk_all(ExLogic.value(), Substitution.t()) :: ExLogic.value()
   def walk_all(v, r) do
     case walk(v, r) do
-      [h | t] -> [walk_all(h, r) | walk_all(t, r)]
+      [h | t] -> [walk_all(h, r) | walk_all(t, r)] # TODO: make tail recursive version
       v -> v
     end
   end
