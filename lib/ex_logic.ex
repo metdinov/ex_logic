@@ -104,6 +104,11 @@ defmodule ExLogic do
     end
   end
 
+  @spec make_block(term()) :: tuple()
+  defp make_block(v) do
+    {:__block__, [], v}
+  end
+
   @doc """
   Takes a list of variables and a list of goals.
   It creates fresh variables and returns the conjunction of the list of goals.
@@ -224,16 +229,11 @@ defmodule ExLogic do
     end
   end
 
-  @spec make_block(term()) :: tuple()
-  defp make_block(v) do
-    {:__block__, [], v}
-  end
-
   @doc """
-  Takes a number n, a list of variables and a list of goals.
-  Calls fresh on the list of variables and goals, then runs the resulting goal
-  to obtain n substitutions that make it succeed; finally, it returns the
-  values of those substitutions.
+  Takes a number `n`, a list of variables and a list of goals.
+  It takes the `conj` of the goals given and returns a list of the first `n` reifications
+  of the variables.
+  If no unification is possible, an empty list is returned.
 
   ## Examples
 
@@ -243,68 +243,73 @@ defmodule ExLogic do
       ...>    eq(y, :oil)
       ...>   end
       ...> end
-      [[:olive], [:oil]]
+      [[:olive, "_0"], [:oil, "_0"]]
 
-      iex> run(1, [x]) do
-      ...>   disj do
+      iex> run(1, [x, y]) do
       ...>    eq(x, :olive)
-      ...>    eq(x, :oil)
+      ...>    eq(y, x)
       ...>   end
       ...> end
-      [[:olive]]
+      [[:olive, :olive]]
 
   """
-  defmacro run(n, vars, goals) do
-    quote do
-      g = ExLogic.fresh(unquote(vars), unquote(goals))
+  defmacro run(n, vars, do: body) when is_list(vars) do
+    goals = inject_out_goal(vars, body)
 
-      ExLogic.Goals.run_goal(unquote(n), g)
-      |> names_from_substitutions()
+    quote do
+      out_var = ExLogic.Var.new()
+      reifier = ExLogic.Goals.reify(out_var)
+
+      fresh(unquote(vars), do: unquote(goals))
+      |> ExLogic.Goals.run_goal(unquote(n))
+      |> Enum.map(reifier)
     end
   end
 
+  @spec inject_out_goal(Macro.t(), Macro.t()) :: Macro.t()
+  defp inject_out_goal(q_vars, {:__block__, meta, gs}) do
+    out_goal =
+      quote do
+        ExLogic.Goals.eq(unquote({:out_var, [], __MODULE__}), unquote(q_vars))
+      end
+
+    {:__block__, meta, [out_goal | gs]}
+  end
+
+  defp inject_out_goal(q_vars, goal) do
+    out_goal =
+      quote do
+        ExLogic.Goals.eq(unquote({:out_var, [], __MODULE__}), unquote(q_vars))
+      end
+
+    {:__block__, [], [out_goal, goal]}
+  end
+
   @doc """
-  Same as run, except ALL values of the substitutions that make the
-  resulting goal succeed are returned.
+  Like `run/3` except it returns **all** posible reifications for the goals given.
 
   ## Examples
 
       iex> run_all([x, y]) do
       ...>  disj do
       ...>    eq(x, :olive)
-      ...>    eq(y, :oil)
+      ...>    eq(x, :oil)
       ...>  end
+      ...>  eq(y, :garlic)
       ...> end
-      [[:olive], [:oil]]
+      [[:olive, :garlic], [:oil, :garlic]]
+
   """
-  defmacro run_all(vars, goals) do
+  defmacro run(vars, do: body) when is_list(vars) do
+    goals = inject_out_goal(vars, body)
+
     quote do
-      ExLogic.fresh(unquote(vars), unquote(goals))
+      out_var = ExLogic.Var.new()
+      reifier = ExLogic.Goals.reify(out_var)
+
+      fresh(unquote(vars), do: unquote(goals))
       |> ExLogic.Goals.run_all()
-      |> names_from_substitutions()
+      |> Enum.map(reifier)
     end
-  end
-
-  def names_from_substitutions(substitutions) do
-    reified_vars =
-      Enum.map(substitutions, fn s ->
-        Enum.map(Map.keys(s), fn var -> ExLogic.Goals.reify(var) end)
-      end)
-      |> List.flatten()
-      |> Enum.uniq()
-
-    Enum.map(reified_vars, fn var -> Enum.map(substitutions, var) end)
-    |> Enum.map(fn names ->
-      Enum.filter(names, fn name -> valid?(name) end)
-      |> Enum.uniq()
-    end)
-  end
-
-  def valid?(name) when is_binary(name) do
-    not String.starts_with?(name, "_")
-  end
-
-  def valid?(_name) do
-    true
   end
 end
