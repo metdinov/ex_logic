@@ -1,4 +1,5 @@
 defmodule ExLogic.GoalsTest do
+  @moduledoc false
   use ExUnit.Case
 
   require ExLogic
@@ -26,7 +27,7 @@ defmodule ExLogic.GoalsTest do
           eq(x, :oil)
         end
 
-      results = run_goal(1, goal)
+      results = run_goal(goal, 1)
 
       assert length(results) == 1
 
@@ -44,7 +45,7 @@ defmodule ExLogic.GoalsTest do
           eq(x, :oil)
         end
 
-      results = run_goal(1, goal)
+      results = run_goal(goal, 1)
       assert Enum.empty?(results)
     end
 
@@ -58,7 +59,7 @@ defmodule ExLogic.GoalsTest do
           eq(y, :oil)
         end
 
-      results = run_goal(2, goal)
+      results = run_goal(goal, 2)
 
       assert length(results) == 2
 
@@ -121,11 +122,8 @@ defmodule ExLogic.GoalsTest do
       x = Var.new("x")
       stream = [%{x => :olive}, %{x => :oil}]
 
-      result = take(1, stream)
-      assert result == [%{x => :olive}]
-
-      result = take(2, stream)
-      assert result == stream
+      assert take(stream, 1) == [%{x => :olive}]
+      assert take(stream, 2) == stream
     end
   end
 

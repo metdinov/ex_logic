@@ -1,4 +1,5 @@
 defmodule ExLogicTest do
+  @moduledoc false
   use ExUnit.Case
   use ExLogic
 
@@ -88,10 +89,10 @@ defmodule ExLogicTest do
     end
   end
 
-  describe "run_all/1 macro tests" do
+  describe "run/1 macro tests" do
     test "values are returned in the correct order" do
       g =
-        run_all([x, y]) do
+        run([x, y]) do
           disj do
             eq(x, "garlic")
             eq(x, :olive)
@@ -99,7 +100,7 @@ defmodule ExLogicTest do
           end
         end
 
-      assert g == [["garlic", :olive], [:oil]]
+      assert g == [["garlic", "_0"], [:olive, "_0"], ["_0", :oil]]
     end
   end
 end
