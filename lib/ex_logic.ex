@@ -243,12 +243,11 @@ defmodule ExLogic do
       ...>    eq(y, :oil)
       ...>   end
       ...> end
-      [[:olive, "_0"], [:oil, "_0"]]
+      [[:olive, "_0"], ["_0", :oil]]
 
       iex> run(1, [x, y]) do
-      ...>    eq(x, :olive)
-      ...>    eq(y, x)
-      ...>   end
+      ...>   eq(x, :olive)
+      ...>   eq(y, x)
       ...> end
       [[:olive, :olive]]
 
@@ -290,7 +289,7 @@ defmodule ExLogic do
 
   ## Examples
 
-      iex> run_all([x, y]) do
+      iex> run([x, y]) do
       ...>  disj do
       ...>    eq(x, :olive)
       ...>    eq(x, :oil)
