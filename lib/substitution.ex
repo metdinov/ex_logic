@@ -8,8 +8,7 @@ defmodule ExLogic.Substitution do
   """
 
   alias __MODULE__
-  alias ExLogic.{Var, Unify}
-
+  alias ExLogic.{Var, Unify, Walk}
   @type t :: %{required(Var.t()) => ExLogic.ExLogic.value()}
 
   @doc """
@@ -19,41 +18,12 @@ defmodule ExLogic.Substitution do
   def empty_s, do: %{}
 
   @doc """
-  Walks the substitution to find the value associated with `x`.
-  If the associated value is a variable, it recursively walks again.
-
-  ## Examples
-
-      iex> x = Var.new("x")
-      iex> y = Var.new("y")
-      iex> walk(x, %{x => y, y => 3})
-      3
-      iex> walk(:atom, %{})
-      :atom
-      iex> walk(y, %{x => 6})
-      y
-
-  """
-  @spec walk(ExLogic.value(), Substitution.t()) :: ExLogic.value()
-  def walk(%Var{} = var, s) do
-    case Map.fetch(s, var) do
-      {:ok, %Var{} = y} -> walk(y, s)
-      {:ok, value} -> value
-      :error -> var
-    end
-  end
-
-  def walk(value, _substitution) do
-    value
-  end
-
-  @doc """
   Recursively walks the substitution `r` and produces a value in which
   every variable is fresh.
   """
   @spec walk_all(ExLogic.value(), Substitution.t()) :: ExLogic.value()
   def walk_all(v, r) do
-    case walk(v, r) do
+    case Walk.walk(v, r) do
       # TODO: make tail recursive version
       [h | t] -> [walk_all(h, r) | walk_all(t, r)]
       v -> v
@@ -103,7 +73,7 @@ defmodule ExLogic.Substitution do
   """
   @spec occurs?(Var.t(), ExLogic.value(), Substitution.t()) :: boolean()
   def occurs?(x, v, s) do
-    v = walk(v, s)
+    v = Walk.walk(v, s)
 
     case v do
       %Var{} -> v == x
@@ -131,8 +101,8 @@ defmodule ExLogic.Substitution do
   @spec unify(ExLogic.value(), ExLogic.value(), Substitution.t()) ::
           {:ok, Substitution.t()} | :error
   def unify(u, v, s) do
-    u = walk(u, s)
-    v = walk(v, s)
+    u = Walk.walk(u, s)
+    v = Walk.walk(v, s)
 
     cond do
       u === v -> {:ok, s}

@@ -9,7 +9,7 @@ defmodule ExLogic.Goals do
     - #u is represented as fail/0
   """
 
-  alias ExLogic.{Substitution, Var}
+  alias ExLogic.{Substitution, Var, Walk}
 
   @type stream :: maybe_improper_list(Substitution.t(), stream) | suspension()
 
@@ -195,7 +195,7 @@ defmodule ExLogic.Goals do
   """
   @spec reify_s(ExLogic.value(), Substitution.t()) :: Substitution.t()
   def reify_s(v, s) do
-    case Substitution.walk(v, s) do
+    case Walk.walk(v, s) do
       %Var{} = v -> Map.put(s, v, reify_name(map_size(s)))
       [h | t] -> reify_s(t, reify_s(h, s))
       _ -> s

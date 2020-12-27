@@ -1,14 +1,25 @@
 defmodule ExLogic.SubstitutionTest do
+  @moduledoc false
   use ExUnit.Case
 
   import ExLogic.Substitution
-  alias ExLogic.Var
+  alias ExLogic.{Var, Walk}
 
   doctest ExLogic.Substitution, except: [unify: 3]
 
   describe "walk/2 tests" do
     test "when the first argument is not a variable, it returns it" do
-      assert walk(:value, %{}) == :value
+      assert Walk.walk(:value, %{}) == :value
+    end
+
+    test "when the first argument is a variable, it walks it recursively" do
+      x = Var.new("x")
+      y = Var.new("y")
+      result = Walk.walk(x, %{x => y, y => 3})
+      assert result == 3
+
+      result = Walk.walk(y, %{x => 6})
+      result == y
     end
   end
 
