@@ -1,4 +1,5 @@
 defmodule ExLogic.GoalsTest do
+  @moduledoc false
   use ExUnit.Case
 
   require ExLogic

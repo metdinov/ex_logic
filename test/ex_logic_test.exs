@@ -1,4 +1,5 @@
 defmodule ExLogicTest do
+  @moduledoc false
   use ExUnit.Case
   use ExLogic
 
