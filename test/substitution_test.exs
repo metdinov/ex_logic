@@ -19,7 +19,7 @@ defmodule ExLogic.SubstitutionTest do
       assert result == 3
 
       result = Walk.walk(y, %{x => 6})
-      result == y
+      assert result == y
     end
   end
 

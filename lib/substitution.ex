@@ -23,11 +23,14 @@ defmodule ExLogic.Substitution do
   """
   @spec walk_all(ExLogic.value(), Substitution.t()) :: ExLogic.value()
   def walk_all(v, r) do
-    case Walk.walk(v, r) do
-      # TODO: make tail recursive version
-      [h | t] -> [walk_all(h, r) | walk_all(t, r)]
-      v -> v
-    end
+    # case Walk.walk(v, r) do
+    #   # TODO: make tail recursive version
+    #   [h | t] -> [walk_all(h, r) | walk_all(t, r)]
+    #   v -> v
+    # end
+    v
+    |> Walk.walk(r)
+    |> Walk.walk_all(r)
   end
 
   @doc """
