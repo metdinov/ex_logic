@@ -91,7 +91,7 @@ defmodule ExLogicTest do
   describe "run/1 macro tests" do
     test "values are returned in the correct order" do
       g =
-        run([x, y]) do
+        run_all([x, y]) do
           disj do
             eq(x, "garlic")
             eq(x, :olive)

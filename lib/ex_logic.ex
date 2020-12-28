@@ -44,6 +44,12 @@ defmodule ExLogic do
     apply_goal(:disj, body)
   end
 
+  defmacro disj([]) do
+    quote do
+      ExLogic.Goals.succeed()
+    end
+  end
+
   defmacro disj(goals) do
     quote do
       Enum.reduce(unquote(goals), &ExLogic.Goals.disj/2)
@@ -71,6 +77,12 @@ defmodule ExLogic do
   """
   defmacro conj(do: body) do
     apply_goal(:conj, body)
+  end
+
+  defmacro conj([]) do
+    quote do
+      ExLogic.Goals.succeed()
+    end
   end
 
   defmacro conj(goals) do
@@ -289,7 +301,7 @@ defmodule ExLogic do
 
   ## Examples
 
-      iex> run([x, y]) do
+      iex> run_all([x, y]) do
       ...>  disj do
       ...>    eq(x, :olive)
       ...>    eq(x, :oil)
@@ -299,7 +311,7 @@ defmodule ExLogic do
       [[:olive, :garlic], [:oil, :garlic]]
 
   """
-  defmacro run(vars, do: body) when is_list(vars) do
+  defmacro run_all(vars, do: body) when is_list(vars) do
     goals = inject_out_goal(vars, body)
 
     quote do

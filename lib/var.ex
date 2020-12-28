@@ -4,10 +4,10 @@ defmodule ExLogic.Var do
   """
 
   @derive {Inspect, only: [:name]}
-  @enforce_keys [:name, :__ref__]
-  defstruct [:name, :__ref__]
+  @enforce_keys [:name, :__id__]
+  defstruct [:name, :__id__]
 
-  @type t :: %ExLogic.Var{name: String.t() | atom(), __ref__: reference()}
+  @type t :: %ExLogic.Var{name: String.t() | atom(), __id__: binary()}
 
   @doc """
   Returns a new variable with the given (optional) name.
@@ -22,6 +22,6 @@ defmodule ExLogic.Var do
   """
   @spec new(name :: String.t()) :: ExLogic.Var.t()
   def new(name \\ "unnamed") when is_binary(name) or is_atom(name) do
-    %ExLogic.Var{name: name, __ref__: make_ref()}
+    %ExLogic.Var{name: name, __id__: UUID.uuid1()}
   end
 end
